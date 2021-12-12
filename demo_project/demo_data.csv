@@ -1,0 +1,3 @@
+scenario,queue,number_of_cores,memory_per_core,memory_limit,walltime
+base,man,1,1GB,7GB,24:00
+S001,man,2,2GB,8GB,48:00
