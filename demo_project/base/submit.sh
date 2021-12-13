@@ -6,7 +6,7 @@
 #BSUB -R "span[hosts=1]"
 #BSUB -R "rusage[mem=1GB]"
 #BSUB -M 7GB
-#BSUB -W 24:00:00
+#BSUB -W 24:00
 
 #BSUB -B
 #BSUB -N
