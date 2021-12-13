@@ -14,8 +14,10 @@ the jobs to the cluster. It follows this overall overall approach:
 
 ---------- ASSUMPTIONS ----------
 
-- This script assumes the following structure of your Balmorel folders:
+- This script assumes the following structure of your directories:
     home_user/
+    │  ├─ files in this repo
+    │  ├─ ...
     ├─ project_name/
     │  ├─ scenario_first/
     │  │  ├─ model/
@@ -33,7 +35,7 @@ the jobs to the cluster. It follows this overall overall approach:
 - To run this program, change your working directory to the folder
   containing this script and execute the following command:
 
-    python3 Balmorel_HPCSubmit.py project_name datafile.csv
+    python3 Balmorel-HPC.py project_name datafile.csv
 
 ---------- LEGAL STUFF ----------
 
@@ -69,17 +71,18 @@ def HPCSubmit(project_name, datafile):
         sys.exit("ERROR: PYTHON 3.6+ IS REQUIRED. SCRIPT HAS STOPPED")
 
     # Loads bash-file template
-    submission_template = Path("submit_template.sh")
-    with submission_template.open(mode="r") as file:
+    submission_template = Path('submit_template.sh')
+    with submission_template.open(mode='r') as file:
         template_text = Template(file.read())
 
-    # Stores argument values of each run (scenario) into a dict and compiles non-empty runs in a list
-    with open(datafile, mode="r") as csv_file:
-        reader = csv.DictReader(csv_file)
+    # Stores argument values of each run (scenario) into a dict
+    # Compiles non-empty rows in the list 'runs'
+    with open(datafile, mode='r') as file:
+        reader = csv.DictReader(file)
         runs = [row for row in reader if any(row.values())]
 
-    # Stops the code if: there are incomplete rows in csv-file or more runs than allowed
-    if len([run["scenario"] for run in runs if not all(run.values())]):
+    # Stops the code if: incomplete rows in csv-file, or more runs than allowed
+    if len([run for run in runs if not all(run.values())]):
         sys.exit("ERROR: INCOMPLETE ROWS IN DATAFILE. SCRIPT HAS STOPPED")
     elif len(runs) > cfg.max_runs:
         sys.exit(
@@ -88,7 +91,7 @@ def HPCSubmit(project_name, datafile):
     # from here on, it prepares and submits each job
     for run in runs:
         # Sets path to the directory and executable file of each scenario
-        path_executable = set_path_executable(project_name, run["scenario"])
+        path_executable = set_path_executable(project_name, run['scenario'])
         path_scenario = path_executable.parent
 
         # Fills argument values into the bash-file template
@@ -96,34 +99,34 @@ def HPCSubmit(project_name, datafile):
             run, project_name=project_name, path_executable=path_executable.as_posix())
 
         if path_scenario.is_dir():
-            # Writes filled template to scenario folder in HPC
-            print("-----------------------------------------------------")
-            submission_file = Path(path_scenario, "submit.sh")
-            with submission_file.open(mode="w+") as file:
+            # Writes the template once filled into the scenario folder
+            submission_file = Path(path_scenario, 'submit.sh')
+            with submission_file.open(mode='w+') as file:
                 file.write(submission_content)
+            print("-----------------------------------------------------")          
             print(f"Submission file for scenario '{run['scenario']}' created")
-            
-            # Submits the job to the HPC system
-            job_submit(path_scenario, run["scenario"], submission_file)
+
+            # Submits the job to the HPC
+            job_submit(path_scenario, run['scenario'], submission_file)
         else:
             print(f"Scenario '{run['scenario']}' skipped, directory not found")
     print("\n ----------------- END OF EXECUTION ----------------- \n")
 
-
+# Returns the path to the executable file
 def set_path_executable(project_name, scenario_name):
-    if cfg.testing_mode:
+    if cfg.option_testing:
         base = Path.cwd()
-        program = "andean"
+        program = 'andean'
     else:
         base = cfg.path_user
-        program = "model/Balmorel"
+        program = 'model/Balmorel'
     return Path(base, project_name, scenario_name, program)
 
-
+# Submits the job through the terminal (PuTTY on Windows)
 def job_submit(path_scenario, scenario_name, submission_file):
     if cfg.option_submit:
-        with submission_file.open(mode="r") as file:
-            subprocess.run(["bsub"], stdin=file, cwd=path_scenario)
+        with submission_file.open(mode='r') as file:
+            subprocess.run(['bsub'], stdin=file, cwd=path_scenario)
         print(f"Scenario '{scenario_name}' successfully submitted")
     else:
         print(
@@ -131,19 +134,19 @@ def job_submit(path_scenario, scenario_name, submission_file):
 
 
 if __name__ == "__main__":
-    if cfg.testing_mode:
+    if cfg.option_testing:
         print("-----------------------------------------------------")
         print("ATTENTION: RUNNING SCRIPT IN TESTING MODE, CONTINUE? ")
         print("-----------------------------------------------------")
         user_input = input("Press Y/N and then Enter: ")
-        if user_input == "Y" or user_input == "y":
-            HPCSubmit("demo_project", "demo_project/demo_data.csv")
+        if user_input == 'Y' or user_input == 'y':
+            HPCSubmit('demo_project', 'demo_project/demo_data.csv')
     else:
         parser = argparse.ArgumentParser(
-            description="Automates the submission of Balmorel runs")
+            description="Automates the generation and submission of Balmorel runs")
         parser.add_argument(
-            "project", type=str, help="Project name, common to all Balmorel scenarios")
+            'project', type=str, help="Project name, common to all Balmorel scenarios")
         parser.add_argument(
-            "filename", type=str, help="CSV file with arguments for the BSUB commands")
+            'filename', type=str, help="Path to CSV file with BSUB command arguments")
         args = parser.parse_args()
         HPCSubmit(args.project, args.filename)
