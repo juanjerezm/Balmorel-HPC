@@ -44,4 +44,4 @@ This script automates the execution of Balmorel runs in the HPC cluster. It gene
 
 
 ## License
-This project is licensed under the GNU General Public License vers. 3 or later - see the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the GNU General Public License vers. 3 or later - see the [LICENSE](LICENSE) file for details.
