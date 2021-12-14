@@ -1,3 +1,6 @@
+# Manually added
+demo_project/**/submit.sh
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
