@@ -35,6 +35,8 @@ This script automates the execution of Balmorel runs in the HPC cluster. It gene
 ## Execution
 - On the HPC terminal, change directory to the folder containing this script and execute the following command:
     > ```python3 Balmorel-HPC.py project_name datafile.csv```
+  - *project_name* is the folder including all scenarios to submit. 
+  - *datafile.csv* is the full path to the file containing the input data.
 - When running the script for testing purposes, set *option_testing* in *config.py* to **True**. This way, files stored in folder *demo_project* are used. Then, execute the following command:
     > ```python3 Balmorel-HPC.py```
 
