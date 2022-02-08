@@ -35,7 +35,7 @@ the jobs to the cluster. It follows this overall overall approach:
 - To run this program, change your working directory to the folder
   containing this script and execute the following command:
 
-    python3 Balmorel-HPC.py project_name datafile.csv
+    python3 Balmorel-HPC.py project_name /path/to/datafile.csv
 
 ---------- LEGAL STUFF ----------
 
@@ -77,9 +77,12 @@ def HPCSubmit(project_name, datafile):
 
     # Stores argument values of each run (scenario) into a dict
     # Compiles non-empty rows in the list 'runs'
-    with open(datafile, mode='r') as file:
-        reader = csv.DictReader(file)
-        runs = [row for row in reader if any(row.values())]
+    if Path(datafile).is_file():
+        with open(datafile, mode='r') as file:
+            reader = csv.DictReader(file)
+            runs = [row for row in reader if any(row.values())]
+    else:
+        sys.exit("ERROR: Input csv-file not found, make sure its full path is included. SCRIPT HAS STOPPED")
 
     # Stops the code if: incomplete rows in csv-file, or more runs than allowed
     if len([run for run in runs if not all(run.values())]):
@@ -147,6 +150,6 @@ if __name__ == "__main__":
         parser.add_argument(
             'project', type=str, help="Project name, common to all Balmorel scenarios")
         parser.add_argument(
-            'filename', type=str, help="Path to CSV file with BSUB command arguments")
+            'datafile', type=str, help="Full path to CSV file with BSUB command arguments")
         args = parser.parse_args()
-        HPCSubmit(args.project, args.filename)
+        HPCSubmit(args.project, args.datafile)

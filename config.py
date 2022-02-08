@@ -18,5 +18,5 @@ max_runs = 10
 # Default value for proper use is 'False'
 option_testing = False
 
-# if option_submit is set to 'False', job submmission to the HPC is skipped (submitting jobs in the local machine breaks the code)
+# if option_submit is set to 'False', job submmission to the HPC is skipped (submitting jobs in the local machine will break the code)
 option_submit = True
