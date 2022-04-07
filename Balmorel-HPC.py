@@ -79,7 +79,9 @@ def HPCSubmit(project_name, datafile):
     # Compiles non-empty rows in the list 'runs'
     if Path(datafile).is_file():
         with open(datafile, mode='r') as file:
-            reader = csv.DictReader(file)
+            delimiter = csv.Sniffer().sniff(file.read()).delimiter
+            file.seek(0)
+            reader = csv.DictReader(file,delimiter = delimiter)
             runs = [row for row in reader if any(row.values())]
     else:
         sys.exit("ERROR: Input csv-file not found, make sure its full path is included. SCRIPT HAS STOPPED")
