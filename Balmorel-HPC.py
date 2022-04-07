@@ -60,6 +60,7 @@ import subprocess
 import sys
 from pathlib import Path
 from string import Template
+from datetime import datetime
 
 import config as cfg
 
@@ -81,10 +82,11 @@ def HPCSubmit(project_name, datafile):
         with open(datafile, mode='r') as file:
             delimiter = csv.Sniffer().sniff(file.read()).delimiter
             file.seek(0)
-            reader = csv.DictReader(file,delimiter = delimiter)
+            reader = csv.DictReader(file, delimiter=delimiter)
             runs = [row for row in reader if any(row.values())]
     else:
-        sys.exit("ERROR: Input csv-file not found, make sure its full path is included. SCRIPT HAS STOPPED")
+        sys.exit(
+            "ERROR: Input csv-file not found, make sure its full path is included. SCRIPT HAS STOPPED")
 
     # Stops the code if: incomplete rows in csv-file, or more runs than allowed
     if len([run for run in runs if not all(run.values())]):
@@ -105,20 +107,23 @@ def HPCSubmit(project_name, datafile):
 
         if path_scenario.is_dir():
             # Writes the template once filled into the scenario folder
-            submission_file = Path(path_scenario, 'submit.sh')
-            with submission_file.open(mode='w+') as file:
+            submission_filename = 'submission_' + \
+                datetime.now().strftime('%Y%m%d-%H%M%S') + '.sh'
+            submission_filepath = Path(path_scenario, submission_filename)
+            with submission_filepath.open(mode='w+') as file:
                 file.write(submission_content)
-            print("-----------------------------------------------------")          
+            print("-----------------------------------------------------")
             print(f"Submission file for scenario '{run['scenario']}' created")
 
             # Submits the job to the HPC
-            job_submit(path_scenario, run['scenario'], submission_file)
+            job_submit(path_scenario, run['scenario'], submission_filepath)
         else:
             print(f"Scenario '{run['scenario']}' skipped, directory not found")
     print("\n ----------------- END OF EXECUTION ----------------- \n")
 
-# Returns the path to the executable file
+
 def set_path_executable(project_name, scenario_name):
+    # Returns the path to the executable file
     if cfg.option_testing:
         base = Path.cwd()
         program = 'andean'
@@ -127,8 +132,9 @@ def set_path_executable(project_name, scenario_name):
         program = 'model/Balmorel'
     return Path(base, project_name, scenario_name, program)
 
-# Submits the job through the terminal (PuTTY on Windows)
+
 def job_submit(path_scenario, scenario_name, submission_file):
+    # Submits the job through the terminal (PuTTY on Windows)
     if cfg.option_submit:
         with submission_file.open(mode='r') as file:
             subprocess.run(['bsub'], stdin=file, cwd=path_scenario)
