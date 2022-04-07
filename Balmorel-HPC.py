@@ -3,7 +3,7 @@ Main author: Juan Jerez, jujmo@dtu.dk
 
 ---------- GENERAL DESCRIPTION ----------
 
-This script automates the execution of Balmorel runs in the HPC cluster.
+This script automates the execution of Balmorel runs in the HPC cluster. 
 It generates bash-files (.sh) with the necessary commands, and submits
 the jobs to the cluster. It follows this overall overall approach:
 
@@ -15,16 +15,21 @@ the jobs to the cluster. It follows this overall overall approach:
 ---------- ASSUMPTIONS ----------
 
 - This script assumes the following structure of your directories:
-    home_user/
+    home_folder/
+    ├─ Balmorel-HPC/
     │  ├─ files in this repo
     │  ├─ ...
     ├─ project_name/
     │  ├─ scenario_first/
     │  │  ├─ model/
     │  │  │  ├─ Balmorel.gams
+    │  │  ├─ ...
     │  ├─ scenario_second/
     │  │  ├─ model/
     │  │  │  ├─ Balmorel.gams
+    │  │  ├─ ...
+    │  ├─ ...
+    ├─ ...
 
 - Project and scenario folder names MUST coincide with data provided to the script.
 
@@ -58,12 +63,13 @@ import argparse
 import csv
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 from string import Template
-from datetime import datetime
 
 import config as cfg
 
+timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
 
 def HPCSubmit(project_name, datafile):
     # Checks Python version
@@ -71,72 +77,71 @@ def HPCSubmit(project_name, datafile):
         print("-----------------------------------------------------")
         sys.exit("ERROR: PYTHON 3.6+ IS REQUIRED. SCRIPT HAS STOPPED")
 
-    # Loads bash-file template
-    submission_template = Path('submit_template.sh')
-    with submission_template.open(mode='r') as file:
-        template_text = Template(file.read())
-
-    # Stores argument values of each run (scenario) into a dict
-    # Compiles non-empty rows in the list 'runs'
+    # Reads and stores job parameters for each scenario (run) into a dict
     if Path(datafile).is_file():
         with open(datafile, mode='r') as file:
+            # Detects the csv file's delimiter
             delimiter = csv.Sniffer().sniff(file.read()).delimiter
             file.seek(0)
             reader = csv.DictReader(file, delimiter=delimiter)
+            # Compilation of non-empty csv rows, each is row a dict like {job_parameter:value, ...}
             runs = [row for row in reader if any(row.values())]
     else:
         sys.exit(
             "ERROR: Input csv-file not found, make sure its full path is included. SCRIPT HAS STOPPED")
 
-    # Stops the code if: incomplete rows in csv-file, or more runs than allowed
+    # Stops the code if there're incomplete rows from csv-file
     if len([run for run in runs if not all(run.values())]):
         sys.exit("ERROR: INCOMPLETE ROWS IN DATAFILE. SCRIPT HAS STOPPED")
+    # Stops the script if number of scenarios is larger than the simultaneous runs allowed in the HPC
     elif len(runs) > cfg.max_runs:
         sys.exit(
-            f"ERROR: EXCEEDED MAX RUNS, SEE CONFIG.PY SETTINGS. SCRIPT HAS STOPPED")
+            f"ERROR: EXCEEDED MAX ALLOWED HPC RUNS, SEE CONFIG.PY SETTINGS. SCRIPT HAS STOPPED")
 
-    # from here on, it prepares and submits each job
+    # Loads jobscript template (bash file)
+    with Path('submit_template.sh').open(mode='r') as file:
+        jobscript_template = Template(file.read())
+
+    # from here on, the script creates each job, and submits it
     for run in runs:
-        # Sets path to the directory and executable file of each scenario
-        path_executable = set_path_executable(project_name, run['scenario'])
-        path_scenario = path_executable.parent
+        # Sets path of each scenario folder, along with its executable and jobscript files
+        path_scenario, path_executable, path_jobscript = set_filepaths(
+            project_name, run['scenario'])
 
-        # Fills argument values into the bash-file template
-        submission_content = template_text.substitute(
-            run, project_name=project_name, path_executable=path_executable.as_posix())
-
+        print("-----------------------------------------------------")
         if path_scenario.is_dir():
-            # Writes the template once filled into the scenario folder
-            submission_filename = 'submission_' + \
-                datetime.now().strftime('%Y%m%d-%H%M%S') + '.sh'
-            submission_filepath = Path(path_scenario, submission_filename)
-            with submission_filepath.open(mode='w+') as file:
-                file.write(submission_content)
-            print("-----------------------------------------------------")
-            print(f"Submission file for scenario '{run['scenario']}' created")
-
-            # Submits the job to the HPC
-            job_submit(path_scenario, run['scenario'], submission_filepath)
+            # Populates the jobscript template with parameters, and writes it into the scenario folder
+            job_creation(project_name, jobscript_template, run,
+                         path_executable, path_jobscript)
+            # Submits the jobscript to the HPC
+            job_submision(run['scenario'], path_scenario, path_jobscript)
         else:
             print(f"Scenario '{run['scenario']}' skipped, directory not found")
     print("\n ----------------- END OF EXECUTION ----------------- \n")
 
 
-def set_path_executable(project_name, scenario_name):
-    # Returns the path to the executable file
-    if cfg.option_testing:
-        base = Path.cwd()
-        program = 'andean'
-    else:
-        base = cfg.path_user
-        program = 'model/Balmorel'
-    return Path(base, project_name, scenario_name, program)
+def set_filepaths(project_name, scenario_name):
+    # Returns the path to the scenario folder, as well as the executable and jobscript files
+    path_scenario = Path(cfg.base_path, project_name, scenario_name)
+    path_executable = Path(path_scenario, cfg.file_executable)
+    path_jobscript = Path(path_scenario, f"jobscript_{timestamp}.sh")
+    return path_scenario, path_executable, path_jobscript
 
 
-def job_submit(path_scenario, scenario_name, submission_file):
+def job_creation(project_name, template_text, scenario, path_executable, path_jobscript):
+    # Fills argument values into the bash-file template
+    jobscript_content = template_text.substitute(
+        scenario, project_name=project_name, path_executable=path_executable.as_posix())
+    with path_jobscript.open(mode='w+') as file:
+        file.write(jobscript_content)
+    print(f"Submission file for scenario '{scenario['scenario']}' created")
+    return
+
+
+def job_submision(scenario_name, path_scenario, path_jobscript):
     # Submits the job through the terminal (PuTTY on Windows)
     if cfg.option_submit:
-        with submission_file.open(mode='r') as file:
+        with path_jobscript.open(mode='r') as file:
             subprocess.run(['bsub'], stdin=file, cwd=path_scenario)
         print(f"Scenario '{scenario_name}' successfully submitted")
     else:
