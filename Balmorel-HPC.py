@@ -71,6 +71,7 @@ import config as cfg
 
 timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
 
+
 def HPCSubmit(project_name, datafile):
     # Checks Python version
     if sys.version_info < (3, 6):
@@ -122,8 +123,11 @@ def HPCSubmit(project_name, datafile):
 
 def set_filepaths(project_name, scenario_name):
     # Returns the path to the scenario folder, as well as the executable and jobscript files
-    path_scenario = Path(cfg.base_path, project_name, scenario_name)
-    path_executable = Path(path_scenario, cfg.file_executable)
+    path_executable = Path(cfg.base_path, project_name,
+                           scenario_name, cfg.file_executable)
+    path_scenario = path_executable.parent
+    # path_scenario = Path(cfg.base_path, project_name, scenario_name)
+    # path_executable = Path(path_scenario, cfg.file_executable)
     path_jobscript = Path(path_scenario, f"jobscript_{timestamp}.sh")
     return path_scenario, path_executable, path_jobscript
 
@@ -131,7 +135,7 @@ def set_filepaths(project_name, scenario_name):
 def job_creation(project_name, template_text, scenario, path_executable, path_jobscript):
     # Fills argument values into the bash-file template
     jobscript_content = template_text.substitute(
-        scenario, project_name=project_name, path_executable=path_executable.as_posix())
+        scenario, project_name=project_name, path_executable=path_executable.as_posix(), output=path_executable.name)
     with path_jobscript.open(mode='w+') as file:
         file.write(jobscript_content)
     print(f"Submission file for scenario '{scenario['scenario']}' created")
