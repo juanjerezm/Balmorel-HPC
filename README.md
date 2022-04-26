@@ -7,8 +7,8 @@ This script automates the execution of Balmorel runs in the HPC cluster. It gene
 - Loads the file *submit_template.sh*, which contains the required *BSUB* job submission commands.
 - Loads a csv-file, provided by the user, with values for each of these commands.
 - Fills the template with the values from the csv-file.
-- The contents of this filled template are written to a submission file (*submit.sh*) in its respective scenario folder in the HPC.
-- The submission file is sent to the HPC through the command line, submitting the job to the queue.
+- The contents of this filled template are written to a submission file (*submit_yyyymmdd-hhmmss.sh*) in its respective scenario folder in the HPC.
+- The submission file is automatically sent to the HPC through the command line, submitting the job to the queue.
 
 ## Prequerisites
 - Python 3.6 or higher
@@ -24,10 +24,12 @@ This script automates the execution of Balmorel runs in the HPC cluster. It gene
     │  ├─ files in this repo
     │  ├─ ...
     ├─ project_name/
+    │  ├─ datafile.csv
     │  ├─ scenario_first/
     │  │  ├─ model/
     │  │  │  ├─ Balmorel.gams
     │  ├─ scenario_second/
+    │  ├─ datafile.csv
     │  │  ├─ model/
     │  │  │  ├─ Balmorel.gams
     ```

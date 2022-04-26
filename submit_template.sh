@@ -13,4 +13,4 @@
 #BSUB -oo Output_%J.out 
 #BSUB -eo Error_%J.err 
 
-gams ${path_executable} o=Balmorel.lst
+gams ${path_executable} o=${output}.lst

@@ -16,7 +16,15 @@ max_runs = 10
 
 # if option_testing is set to 'True', script uses example data from demo_project.
 # Default value for proper use is 'False'
-option_testing = False
+option_testing = True
 
 # if option_submit is set to 'False', job submmission to the HPC is skipped (submitting jobs in the local machine will break the code)
-option_submit = True
+option_submit = False
+
+
+if option_testing:
+    base_path = Path.cwd()
+    file_executable = 'andean'
+else:
+    base_path = path_user
+    file_executable = 'model/Balmorel'
