@@ -14,11 +14,14 @@ the jobs to the cluster. It follows this overall overall approach:
 
 ---------- ASSUMPTIONS ----------
 
-- This script assumes the following structure of your directories:
-    home_folder/
+- Put this repository in your home HPC-folder.
+    your_HPC_folder/
     ├─ Balmorel-HPC/
     │  ├─ files in this repo
     │  ├─ ...
+
+- This script assumes the following structure of your directories:
+    path_user/  (see config.py file)
     ├─ project_name/
     │  ├─ scenario_first/
     │  │  ├─ model/

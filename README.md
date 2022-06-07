@@ -15,14 +15,18 @@ This script automates the execution of Balmorel runs in the HPC cluster. It gene
 
 ## Installation
 - Setting an environment in the HPC is not strictly necessary.
-- Copy the contents of this repository in your HPC folder.
-- Project and scenario folder names **must** coincide with data provided in the csv-file to the script.
-- The script is built assuming the following directory structure:
-    ```    
-    home_user/
+- Copy this repository in your HPC folder like this:
+    ``` 
+    your_HPC_folder/
     ├─ Balmorel-HPC/
     │  ├─ files in this repo
     │  ├─ ...
+    ```
+
+- Project and scenario folder names **must** coincide with data provided in the csv-file to the script.
+- The script is built assuming the following directory structure:
+    ``` 
+    path_user/  (see config.py file)
     ├─ project_name/
     │  ├─ datafile.csv
     │  ├─ scenario_first/
