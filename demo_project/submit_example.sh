@@ -1,6 +1,6 @@
-### This file is not used anywhere in the script, it is
-### just to show a normal submission script. It just gives
-### context and comments on commands and values.
+### This file is not used anywhere in the script, nor it is used
+### in testing mode, it is just to show a normal submission script. 
+### It just gives context and comments on commands and values.
 
 
 #!/bin/sh

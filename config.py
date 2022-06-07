@@ -8,7 +8,7 @@ Thus, it should only be modified during installation or development.
 
 from pathlib import Path
 
-# path to the user's folder in the HPC
+# path to the user's folder in the HPC, where the project folder is located
 path_user = Path('/work3/jujmo/')
 
 # maximum number of simultaneous submissions to HPC, to avoid spamming the HPC
