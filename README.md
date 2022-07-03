@@ -33,7 +33,6 @@ This script automates the execution of Balmorel runs in the HPC cluster. It gene
     │  │  ├─ model/
     │  │  │  ├─ Balmorel.gams
     │  ├─ scenario_second/
-    │  ├─ datafile.csv
     │  │  ├─ model/
     │  │  │  ├─ Balmorel.gams
     ```
